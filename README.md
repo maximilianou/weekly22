@@ -1,5 +1,10 @@
-# weekly21
-Typescript - React - Redux Learning
+# weekly22
+
+## Typescript - UI - React - Redux Learning
+
+## Typescript - API - OpenAPI Swagger Auth - environment
+
+## Typescript - API -> DB - Mongoose MongoDB TDD inmemorydb
 
 ```
 npm i io-ts fp-ts
@@ -10,7 +15,6 @@ npm i io-ts fp-ts
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Users } from './Users';
-
 test('renders Users', () => {
     const users =  [
         {id: 3, name: 'Maximiliano', email: 'maximilianou@gmail.com', website: 'https://github.com/maximilianou', 
@@ -19,10 +23,6 @@ test('renders Users', () => {
         address: { street: '', suite: '', city: '', geo: { lat: '3', lng: '4'}}},
         {id: 7, name: 'Julian', email: 'juu@gmail.com', website: 'https://github.com/julian', 
         address: { street: '', suite: '', city: '', geo: { lat: '1', lng: '2'}}},
-//        {id: '13', name: 'Julian', email: 'juu@gmail.com', website: 'https://github.com/julian', 
-//        address: { street: '', suite: '', city: '', geo: { lat: 33, lng: 44}}},
-//        {id: 15, name: 'Julian', email: 'juu@gmail.com', website: 'https://github.com/julian', 
-//        address: { street: '', suite: '', city: '', geo: { lat: 33, lng: 44}}},
     ]; 
     render(<Users users={users} />);
     const elemMax = screen.getAllByText(/Maximiliano/g);
@@ -32,14 +32,12 @@ test('renders Users', () => {
     const elemJul = screen.getAllByText(/Julian/g);
     expect(elemJul[0]).toBeInTheDocument();
 });
-
 ```
 
 ```tsx
 // Users.tsx
 import { isRight } from 'fp-ts/lib/Either';
 import * as t from 'io-ts';
-
 const Address = t.type({
     street: t.string,
     suite: t.string,
@@ -49,7 +47,6 @@ const Address = t.type({
         lng: t.string
     }),
 })
-
 const User = t.type({
   id: t.number,
   name: t.string,
@@ -57,7 +54,6 @@ const User = t.type({
   website: t.string,
   address : Address,
 })
-
 type AddressType = {
     street: string,
     suite: string,
@@ -67,7 +63,6 @@ type AddressType = {
         lng: string
     }
 }
-
 type UserType = {
     id: number,
     name: string,
@@ -75,11 +70,9 @@ type UserType = {
     website: string,
     address: AddressType
 }
-
 type UsersProps = {
     users: UserType[]
 }
-
 export const Users: React.FC<UsersProps> = ( { users } ) => (
         <>
           <ul>
@@ -91,7 +84,6 @@ export const Users: React.FC<UsersProps> = ( { users } ) => (
           </ul>
         </>
 )
-
 ```
 
  - Create API project structure
@@ -128,14 +120,12 @@ package.json
   "devDependencies": {
     "ts-node": "^9.1.1"
   }
-
 ```
 
 ```ts
 //server.ts
 import express from 'express'
 import {Express} from 'express-serve-static-core'
-
 export async function createServer(): Promise<Express> {
   const server = express()
   server.get('/', (req, res) => {
@@ -148,7 +138,6 @@ export async function createServer(): Promise<Express> {
 ```ts
 //app.ts
 import {createServer} from './utils/server'
-
 createServer()
   .then(server => {
     server.listen(3000, () => {
@@ -258,27 +247,20 @@ import * as OpenApiValidator  from 'express-openapi-validator';
 import { connector, summarise} from 'swagger-routes-express';
 import YAML from 'yamljs';
 import swaggerUi from 'swagger-ui-express';
-
 import * as api from '../api/controllers/greeting';
-
 export async function createServer(): Promise<Express> {
   const yamlSpecFile = './config/openapi.yml';
   const apiDefinition = YAML.load(yamlSpecFile);
   const apiSummary = summarise(apiDefinition);
-
-  const server = express();
-  
+  const server = express();  
   server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(apiDefinition));
-  
   const validatorOprions = {
     coerceType: true,
     apiSpec: yamlSpecFile,
     validateRequests: true,
     validateResponses: true
   }
-
   server.use(OpenApiValidator.middleware(validatorOprions));
-
   server.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     res.status(err.status).json({
       error: {
@@ -288,17 +270,14 @@ export async function createServer(): Promise<Express> {
       }
     });
   });
-
   const connect = connector(api, apiDefinition, {
     onCreateRoute: (method: string, descriptor: any[]) => {
       console.log(`${method}: ${descriptor[0]} : ${(descriptor[1] as any).name}`);
     }
   });
   connect(server);
-
   return server;
 }
-
 ```
 
 ```
@@ -313,12 +292,12 @@ curl http://localhost:3021/api/v1/hello?name=Max
 
 
 ```sh
-maximilianou@instrument:~/projects/weekly21$ cd api/
-maximilianou@instrument:~/projects/weekly21/api$ mkdir -p src/api/services
-maximilianou@instrument:~/projects/weekly21/api$ touch src/api/services/user.ts
-maximilianou@instrument:~/projects/weekly21/api$ touch src/api/controllers/user.ts
-maximilianou@instrument:~/projects/weekly21/api$ mkdir -p src/api/utils
-maximilianou@instrument:~/projects/weekly21/api$ touch src/api/utils/express.ts
+maximilianou@instrument:~/projects/weekly22$ cd api/
+maximilianou@instrument:~/projects/weekly22/api$ mkdir -p src/api/services
+maximilianou@instrument:~/projects/weekly22/api$ touch src/api/services/user.ts
+maximilianou@instrument:~/projects/weekly22/api$ touch src/api/controllers/user.ts
+maximilianou@instrument:~/projects/weekly22/api$ mkdir -p src/api/utils
+maximilianou@instrument:~/projects/weekly22/api$ touch src/api/utils/express.ts
 
 ```
 
@@ -723,7 +702,488 @@ describe('auth failure', () => {
 });
 ```
 
+...https://losikov.medium.com/part-5-mongodb-with-mongoose-d01144739002
+### Mongo, mongoose, bcrypt
+```
+npm i mongoose bcrypt mongodb-memory-server
+npm i -D @types/mongoose @types/bcrypt @types/mongodb-memory-server 
+npm i -D faker @types/faker
 
+```
+
+```
+maximilianou@instrument:~/projects/weekly22$ cat api/config/.env.schema 
+MORGAN_LOGGER=
+MORGAN_BODY_LOGGER=
+EXMPL_DEV_LOGGER=
+# see src/utils/logger.ts for the list of values
+LOGGER_LEVEL=
+MONGO_URL=
+MONGO_CREATE_INDEX=
+MONGO_AUTO_INDEX=
+```
+```
+maximilianou@instrument:~/projects/weekly22$ cat api/config/.env.dev
+MORGAN_LOGGER=true
+MORGAN_BODY_LOGGER=true
+EXMPL_DEV_LOGGER=true
+LOGGER_LEVEL=debug
+MONGO_URL=mongodb://localhost/exmpl
+MONGO_AUTO_INDEX=true
+```
+```
+maximilianou@instrument:~/projects/weekly22$ cat api/config/.env.prod
+MORGAN_LOGGER=true
+LOGGER_LEVEL=http
+MONGO_URL=mongodb://localhost/exmpl
+MONGO_AUTO_INDEX=false
+```
+```
+maximilianou@instrument:~/projects/weekly22$ cat api/config/.env.test 
+MONGO_URL=inmemory
+MONGO_AUTO_INDEX=true
+
+```
+
+```ts
+// src/config/index.ts
+import dotenvExtended from 'dotenv-extended';
+import dotenvParseVariables from 'dotenv-parse-variables';
+type LogLevel = 'silent' | 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly';
+const env = dotenvExtended.load({
+  path: process.env.ENV_FILE,
+  defaults: './config/.env.defaults',
+  schema: './config/.env.schema',
+  includeProcessEnv: true,
+  silent: false,
+  errorOnMissing: true,
+  errorOnExtra: true
+});
+const parsedEnv = dotenvParseVariables(env);
+interface Config {
+  morganLogger: boolean,
+  morganBodyLogger: boolean,
+  exmplDevLogger: boolean,
+  loggerLevel: LogLevel, 
+  mongo: {
+    url: string,
+    useCreateIndex: boolean,
+    autoIndex: boolean,
+  },
+};
+const config : Config = {
+  morganLogger: parsedEnv.MORGAN_LOGGER as boolean,
+  morganBodyLogger: parsedEnv.MORGAN_BODY_LOGGER as boolean,
+  exmplDevLogger: parsedEnv.EXMPL_DEV_LOGGER as boolean,
+  loggerLevel: parsedEnv.LOGGER_LEVEL as LogLevel,
+  mongo: {
+    url: parsedEnv.MONGO_URL as string,
+    useCreateIndex: parsedEnv.MONGO_CREATE_INDEX as boolean,
+    autoIndex: parsedEnv.MONGO_AUTO_INDEX as boolean,
+  },
+};
+export default config;
+```
+
+```ts
+// src/utils/db.ts
+/* istanbul ignore file */
+import mongoose from 'mongoose';
+import {MongoMemoryServer} from 'mongodb-memory-server';
+import config from '@exmpl/config';
+import logger from '@exmpl/utils/logger';
+mongoose.Promise = global.Promise;
+mongoose.set('debug', process.env.DEBUG !== undefined);
+const opts = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: config.mongo.useCreateIndex,
+  keepAlive: true,
+  keepAliveInitialDelay: 300000,
+  autoIndex: config.mongo.autoIndex,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+};
+class MongoConnection {
+  private static _instance: MongoConnection;
+  private _mongoServer?: MongoMemoryServer;
+  static getInstance(): MongoConnection {
+    if(!MongoConnection._instance){
+      MongoConnection._instance = new MongoConnection();
+    }
+    return MongoConnection._instance;
+  };
+  public async open(): Promise<void> {
+    try{ 
+      if(config.mongo.url === 'inmemory'){
+        logger.debug('connecting to inmemory mongodb');
+        this._mongoServer = new MongoMemoryServer();
+        const mongoUrl = await this._mongoServer.getConnectionString();
+        await mongoose.connect(mongoUrl, opts);
+      }else{
+        logger.debut(`connecting to mongodb: ${config.mongo.url}`);
+        mongoose.connect(config.mongo.url, opts);
+      }
+      mongoose.connection.on('connected', () => {
+        logger.info('Mongo: connected.);
+      });
+      mongoose.connection('disconnected', () => {
+        logger.info('Mongo: disconnected.);
+      });
+      mongoose.connection.on('error', (err) => {
+        logger.error(`Mongo: ${String(err)}`);
+        if(err.name === "MongoNetworkError"){
+          setTimeout( () => {
+            mongoose.connect(config.mongo.url, opts).catch(() => {}); 
+          }, 5000);
+        }
+      });
+    }catch(err){
+      logger.error(`db.open: ${err}`);
+      throw err;
+    }
+  }
+  public async close(): Promise<void> {
+    try{ 
+      await mongoose.disconnect();
+      if(config.mongo.url === 'inmemory'){
+        await this._mongoServer!.stop();
+      }
+    }catch(err){
+      logger.error(`db.open: ${err}`); 
+      throw err;
+    }
+  }
+};
+export default MongoConnection.getInstance();
+```
+
+```ts
+// src/app.ts
+import logger from '@exmpl/utils/logger';
+import {createServer} from '@exmpl/utils/server';
+import db from '@exmpl/utils/db';
+db.open()
+  .then( () =>  
+    createServer() )
+  .then( (server: { listen: (arg0: number, arg1: () => void) => void; }) => {
+      server.listen( 3021, () => {
+          logger.info(`Listening on port: ${3021}`);
+      })
+  })
+  .catch( (err: any) => {
+      logger.error(`Error:: ${err}`);
+  });
+```
+models/user.ts
+```ts
+import bcrypt from 'bcrypt';
+import {Schema, Document, model, Model} from 'mongoose';
+import validator from 'validator';
+interface IUserDocument extends Document {
+  password: string,
+  email: string,
+  name: string,
+  created: Date,
+}
+export interface IUser extends IUserDocument {
+  comparePassword(password: string): Promise<boolean> ;
+}
+const userSchema = new Schema<IUser>({
+  password: {type: String, required: true},
+  email: {type: String, required: true, trim: true, 
+          validate: [validator.isEmail, 'do not match email regex']},
+  name: {type: String, required: true},
+  created: {type:Date, default: Date.now},
+}, {strict: true}).index({email:1}, 
+            {unique: true, 
+             collation: {locale: 'en_US', strength: 1}, sparse: true}); 
+userSchema.pre<IUserDocument>('save', function(next):void  {
+  if(this.isModified('password')){
+    bcrypt.genSalt(10, (err, salt) => {
+      if(err) return next(err);
+      bcrypt.hash(this.password, salt, (err, hash) => {
+        if(err) return next(err);
+        this.password = hash;
+        next();
+      });
+    });
+  }else{
+    next();
+  }
+});
+userSchema.set('toJSON', {
+  transform: function(doc:any, ret:any, options:any){
+    ret.created = ret.created.getTime();
+    delete ret.__v;
+    delete ret._id;
+    delete ret.password;    
+  }
+});
+userSchema.methods.comparePassword = function(candidatePassword: string): Promise<boolean>{
+  const {password} = this;
+  return new Promise(function(resolve, reject){ 
+    bcrypt.compare(candidatePassword, password, function(err, isMatch){
+      if(err) return reject(err);
+      return resolve(isMatch);
+    });
+  });
+};
+export interface IUserModel  extends Model<IUser>{ 
+}
+export const User: IUserModel = model<IUser, IUserModel>('User', userSchema);
+export default User;
+```
+models/__tests__/user.ts
+```ts
+import faker, { fake } from 'faker';
+import User from '@exmpl/api/models/user';
+import db from '@exmpl/utils/db';
+
+beforeAll(async () => {
+  await db.open();
+});
+
+afterAll(async () => {
+  await db.close();
+});
+
+describe('save', () => {
+  it('should create user', async () => {
+    const email = faker.internet.email();
+    const password = faker.internet.password();
+    const name = faker.name.firstName();
+    const before = Date.now();
+
+    const user = new User({
+      email: email, password: password, name: name
+    });
+    await user.save();
+    const after = Date.now();
+    const fetched = await User.findById(user._id);
+    expect(fetched).not.toBeNull();
+    expect(fetched!.email).toBe(email);
+    expect(fetched!.name).toBe(name);
+    expect(fetched!.password).not.toBe(password);
+    expect(before).toBeLessThanOrEqual(fetched!.created.getTime());
+  });
+  it('should update user', async () => {
+    const name1 = faker.name.firstName();
+    const user = new User({
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+      name: name1,
+    });
+    const dbUser1 = await user.save();
+    const name2 = faker.name.firstName();
+    dbUser1.name = name2;
+    const dbUser2 = await dbUser1.save();
+    expect(dbUser2.name).toEqual(name2);
+  });
+  it('should not save user with invalid mail', async () => {
+    const user1 = new User({
+      name: faker.name.findName(),
+      email: 'e@e',
+      password: faker.internet.password(),
+    });
+    return expect(user1.save()).rejects.toThrowError(/email/);
+  });
+  it('should not save user without an email', async () => {
+    const user = new User({
+      password: faker.internet.password(),
+      name: faker.name.firstName(),
+    });
+    return expect(user.save()).rejects.toThrowError(/email/);
+  });
+  it('should not save without a password', async () => {
+    const user2 = new User({
+      email: faker.internet.email(),
+      name: faker.name.firstName,
+    });
+    return expect(user2.save()).rejects.toThrowError(/password/);
+  });
+  it('should not save user without a name', async () => {
+    const user1 = new User({
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+    });
+    return expect(user1.save()).rejects.toThrowError(/name/);
+  });
+  it('should not save users with the same email', async () => {
+    const email = faker.internet.email();
+    const password = faker.internet.password();
+    const name = faker.name.firstName();
+    const userData = { email: email, password: password, name: name};
+    const user1 = new User(userData);
+    await user1.save();
+    const user2 = new User(userData);
+    return expect(user2.save()).rejects.toThrowError(/E11000/);
+  });
+  it('should not save password in a readable form', async () => {
+    const password = faker.internet.password();
+    const user1 = new User({
+      email: faker.internet.email(),
+      password: password,
+      name: faker.name.firstName(),
+    });
+    await user1.save();
+    expect(user1.password).not.toBe(password);
+    const user2 = new User({
+      email: faker.internet.email(),
+      password: password,
+      name: faker.name.firstName(),
+    });
+    await user2.save();
+    expect(user2.password).not.toBe(password);
+    expect(user1.password).not.toBe(user2.password);
+  });
+});
+describe('comparePassword', () => {
+  it('should return true for valid password', async () => {
+    const password = faker.internet.password();
+    const user = new User({
+      email: faker.internet.email(),
+      password: password,
+      name: faker.name.firstName(),
+    });
+    await user.save();
+    expect(await user.comparePassword(password)).toBe(true);
+  });
+  it('should return false for invalid password', async () => {
+    const user = new User({
+      email: faker.internet.email(),
+      password: faker.internet.password,
+      name: faker.name.firstName(),
+    });
+    await user.save();
+    expect(await user.comparePassword(faker.internet.password())).toBe(false);
+  });
+  it('should update password hash if password is updated', async () => {
+    const password1 = faker.internet.password();
+    const user = new User({
+      email: faker.internet.email(),
+      password: password1,
+      name: faker.name.findName(),
+    });
+    const dbUser1 = await user.save();
+    expect(await dbUser1.comparePassword(password1)).toBe(true);
+
+    const password2 =  faker.internet.password();
+    dbUser1.password = password2;
+    const dbUser2 = await dbUser1.save();
+    expect(await dbUser2.comparePassword(password2)).toBe(true);
+    expect(await dbUser2.comparePassword(password1)).toBe(false);
+  });
+
+});
+describe('toJSON', () => {
+  it('should return valid JSON', async () => {
+    const email = faker.internet.email();
+    const password = faker.internet.password();
+    const name = faker.name.findName();
+    const user = new User({email: email, password: password, name: name});
+    await user.save();
+    expect(user.toJSON()).toEqual({ email: email, name: name, created: expect.any(Number)});
+  });
+});
+```
+
+Here we have version conflicts.. over the time.. 
+```
+FAIL  src/api/models/__tests__/user.ts
+  ● Test suite failed to run
+
+    Error: Status Code is 403 (MongoDB's 404)
+    This means that the requested version-platform combination doesn't exist
+      Used Url: "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-debian10-4.0.14.tgz"
+    Try to use different version 'new MongoMemoryServer({ binary: { version: 'X.Y.Z' } })'
+```
+
+package.json
+```json
+{
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "4.4.1"
+    }
+  },
+}
+```
+
+Reinstall packages
+```
+/api$ rm package-lock.json 
+/api$ rm -rf node_modules/
+/api$ npm i
+```
+
+### TDD unit test user mongodb in memory
+```
+api$ npm run test:u
+
+> api@1.0.0 test:u /home/maximilianou/projects/weekly22/api
+> ENV_FILE=./config/.env.test ./node_modules/.bin/jest --verbose --coverage --detectOpenHandles
+
+ PASS  src/api/models/__tests__/user.ts
+  save
+    ✓ should create user (111 ms)
+    ✓ should update user (78 ms)
+    ✓ should not save user with invalid mail (5 ms)
+    ✓ should not save user without an email (3 ms)
+    ✓ should not save without a password (3 ms)
+    ✓ should not save user without a name (3 ms)
+    ✓ should not save users with the same email (138 ms)
+    ✓ should not save password in a readable form (131 ms)
+  comparePassword
+    ✓ should return true for valid password (126 ms)
+    ✓ should return false for invalid password (126 ms)
+    ✓ should update password hash if password is updated (312 ms)
+  toJSON
+    ✓ should return valid JSON (66 ms)
+
+ PASS  src/api/controllers/__tests__/user_failure.ts
+  auth failure
+    ✓ sould return 500 and valid response if auth reject (187 ms)
+
+ PASS  src/api/controllers/__tests__/greeting.ts
+  GET /hello
+    ✓ should return 200 and valid response when param list is empty (109 ms)
+    ✓ should return 200 and valid response when name param is set (17 ms)
+    ✓ should return 400 and valid error response when param is empty (22 ms)
+  GET /goodbye
+    ✓ should return 200 and valid response to authorization with fakeToken request (12 ms)
+    ✓ shourd return 401 and valid error response to invalid auth token (10 ms)
+    ✓ should return 401 and valid error response if authorization header is missed (8 ms)
+
+ PASS  src/api/services/__tests__/user.ts
+  auth
+    ✓ should resolve to true and valid userId for hardcoded token (2 ms)
+    ✓ should resolve with false for invalid token (1 ms)
+
+-----------------|---------|----------|---------|---------|-------------------
+File             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-----------------|---------|----------|---------|---------|-------------------
+All files        |   96.15 |       75 |     100 |     100 |                   
+ api/controllers |     100 |      100 |     100 |     100 |                   
+  greeting.ts    |     100 |      100 |     100 |     100 |                   
+  index.ts       |     100 |      100 |     100 |     100 |                   
+  user.ts        |     100 |      100 |     100 |     100 |                   
+ api/models      |   89.66 |     62.5 |     100 |     100 |                   
+  user.ts        |   89.66 |     62.5 |     100 |     100 | 29-55             
+ api/services    |     100 |      100 |     100 |     100 |                   
+  user.ts        |     100 |      100 |     100 |     100 |                   
+ config          |     100 |      100 |     100 |     100 |                   
+  index.ts       |     100 |      100 |     100 |     100 |                   
+ utils           |     100 |       50 |     100 |     100 |                   
+  express.ts     |     100 |       50 |     100 |     100 | 10                
+-----------------|---------|----------|---------|---------|-------------------
+Test Suites: 4 passed, 4 total
+Tests:       21 passed, 21 total
+Snapshots:   0 total
+Time:        4.593 s, estimated 6 s
+Ran all test suites.
+
+```
 
 Reference:
 

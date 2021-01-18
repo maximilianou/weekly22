@@ -7,17 +7,25 @@
     "build": "./node_modules/.bin/tsc ",
     "start": "ENV_FILE=./config/.env.prod node  -r tsconfig-paths/register ./bin/app.js ",
     "dev": "ENV_FILE=./config/.env.dev  ./node_modules/.bin/ts-node -r tsconfig-paths/register ./src/app.ts ",
-    "test:u": "ENV_FILE=./config/.env.test ./node_modules/.bin/jest --verbose --coverage"
+    "test:u": "ENV_FILE=./config/.env.test ./node_modules/.bin/jest --verbose --coverage --detectOpenHandles"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "4.4.1"
+    }
+  },
   "dependencies": {
+    "bcrypt": "^5.0.0",
     "connect": "^3.7.0",
     "dotenv-extended": "^2.9.0",
     "dotenv-parse-variables": "^1.0.1",
     "express": "^4.17.1",
     "express-openapi-validator": "^4.10.1",
+    "mongodb-memory-server": "^6.9.2",
+    "mongoose": "^5.11.11",
     "morgan": "^1.10.0",
     "morgan-body": "^2.6.4",
     "swagger-routes-express": "^3.2.1",
@@ -29,15 +37,20 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^3.0.0",
     "@types/dotenv-parse-variables": "^0.2.0",
     "@types/express": "^4.17.9",
+    "@types/faker": "^5.1.5",
     "@types/jest": "^26.0.19",
+    "@types/mongodb-memory-server": "^2.3.0",
+    "@types/mongoose": "^5.10.3",
     "@types/morgan": "^1.9.2",
     "@types/node": "^14.14.16",
     "@types/supertest": "^2.0.10",
     "@types/swagger-ui-express": "^4.1.2",
     "@types/validator": "^13.1.2",
     "@types/yamljs": "^0.2.31",
+    "faker": "^5.1.0",
     "jest": "^26.6.3",
     "supertest": "^6.0.1",
     "ts-jest": "^26.4.4",
