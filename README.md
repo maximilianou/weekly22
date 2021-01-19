@@ -1193,7 +1193,100 @@ npm run start
 ```
 http://localhost:3022/api-docs/
 
+### TDD Unit Test User Service
 
+```ts
+import faker from 'faker';
+import db from '@exmpl/utils/db';
+import user from '../user';
+
+beforeAll(async () => {
+  await db.open();
+});
+afterAll( async () => {
+  await db.close();
+});
+
+describe('auth', () => {
+  it('should resolve to true and valid userId for hardcoded token', async () => {
+    const response = await user.auth('fakeToken');
+    expect(response).toEqual({userId: 'fakeTokenId'});
+  });
+  it('should resolve with false for invalid token', async () => {
+    const response = await user.auth('invalidToken');
+    expect(response).toEqual({error: {type: 'unauthorized', message: 'Authorization Failed'}});
+  });
+});
+
+describe('createUser', () => {
+  it('should resolve true in valid userId', async () => {
+    const email = faker.internet.email();
+    const password = faker.internet.password();
+    const name = faker.name.findName();
+    await expect( user.createUser(email, password, name)).resolves.toEqual({
+      userId: expect.stringMatching(/^[a-f0-9]{24}$/)
+    });
+  });
+  it('should resolves false and valid error if duplicate', async () => {
+    const email = faker.internet.email();
+    const password = faker.internet.password();
+    const name = faker.name.findName();
+    await user.createUser(email, password, name);
+    await expect(user.createUser(email, password, name)).resolves.toEqual({
+      error: {
+        type: 'account_already_exists',
+        message: `${email} already exists`,
+      }
+    });
+
+  });
+});
+```
+
+```ts
+export type ErrorResponse = { error: {type: string, message: string}};
+export type AuthResponse = ErrorResponse | {userId: string};
+export type CreateUserResponse = ErrorResponse | {userId: string};
+import logger from '@exmpl/utils/logger';
+import User from '@exmpl/api/models/user';
+
+
+function auth(bearerToken: string): Promise<AuthResponse>{
+  logger.debug(`services::user.ts::auth()`);
+    return new Promise(function(resolve, reject){      
+      const token = bearerToken.replace('Bearer ','');
+      logger.debug(`services::user.ts::auth() .. token::[${token}]`);
+      if(token === 'fakeToken'){
+        return resolve({userId: 'fakeTokenId'});
+      }
+      return resolve({error: {type: 'unauthorized', message: 'Authorization Failed'}});
+    });
+};
+
+function createUser(email: string, password: string, name: string): Promise<CreateUserResponse> {
+  return new Promise( (resolve, reject) => {
+    const user = new User({email: email, password:password, name:name});
+    user.save()
+      .then( u => {
+        resolve({ userId: u._id.toString() });
+      })
+      .catch( err => {
+        if( err.code === 11000 ){
+          resolve( {error: { type: 'account_already_exists', message: `${email} already exists`}} );
+        }else{
+          logger.error(`createUser: ${err}`);
+          reject(err);
+        }
+      });
+  });
+};
+
+export default { auth: auth, createUser: createUser };
+```
+
+```
+npm run test:u
+```
 
 Reference:
 
