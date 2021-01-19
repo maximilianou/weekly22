@@ -1185,6 +1185,16 @@ Ran all test suites.
 
 ```
 
+## Check Web Swagger/OpenAPI Client
+
+```
+npm run build
+npm run start
+```
+http://localhost:3022/api-docs/
+
+
+
 Reference:
 
  - Auth
