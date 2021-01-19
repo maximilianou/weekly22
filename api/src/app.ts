@@ -6,8 +6,8 @@ db.open()
   .then( () =>  
     createServer() )
   .then( (server: { listen: (arg0: number, arg1: () => void) => void; }) => {
-      server.listen( 3021, () => {
-          logger.info(`Listening on port: ${3021}`);
+      server.listen( 3022, () => {
+          logger.info(`Listening on port: ${3022}`);
       })
   })
   .catch( (err: any) => {
