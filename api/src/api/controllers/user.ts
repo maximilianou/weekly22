@@ -20,6 +20,7 @@ export function auth(req: express.Request, res: express.Response,
           }
         })
         .catch(err => {
+          logger.error(`auth: ${err}`);
           writeJsonResponse(res, 500, {
             error: {
               type: 'internal_server_error',

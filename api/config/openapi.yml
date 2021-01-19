@@ -53,6 +53,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HelloResponse'
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailResponse' 
 components:
   securitySchemes:
     bearerAuth:
@@ -66,4 +72,15 @@ components:
         - message
       properties:
         message:
+          type: string
+    FailResponse:
+      type: object
+      additionalProperties: false
+      required: 
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+        error:
           type: string
