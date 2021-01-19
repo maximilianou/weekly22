@@ -1288,6 +1288,7 @@ export default { auth: auth, createUser: createUser };
 npm run test:u
 ```
 
+
 Reference:
 
  - Auth
