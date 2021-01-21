@@ -14,10 +14,10 @@ afterAll(async () => {
   // server kill signal
 });
 
-describe('POST /api/v1/user', () => {
+describe('POST /api/v1/users', () => {
   it('should return 201 and valid response for valid user', async (done) => {
     request(server)
-      .post(`/api/v1/user`)
+      .post(`/api/v1/users`)
       .send({
         email: faker.internet.email(),
         password: faker.internet.password(),
@@ -39,13 +39,13 @@ describe('POST /api/v1/user', () => {
       name: faker.name.firstName()
     };
     request(server)
-      .post(`/api/v1/user`)
+      .post(`/api/v1/users`)
       .send(data)
       .expect(201)
       .end(function(err, res){
         if(err) return done(err);
         request(server)
-          .post(`/api/v1/user`)
+          .post(`/api/v1/users`)
           .send(data)
           .expect(409)
           .end(function(err, res){
@@ -62,7 +62,7 @@ describe('POST /api/v1/user', () => {
   });
   it('should return 400 and valid response for invalid request', async (done) => {
     request(server)
-      .post(`/api/v1/user`)
+      .post(`/api/v1/users`)
       .send({
         mail: faker.internet.email(),
         password: faker.internet.password(),

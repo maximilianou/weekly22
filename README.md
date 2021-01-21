@@ -1193,8 +1193,154 @@ npm run start
 ```
 http://localhost:3022/api-docs/
 
+### TDD Unit Test User Controllers
+
+```ts
+import faker from 'faker';
+import request from 'supertest';
+import {Express} from 'express-serve-static-core';
+import db from '@exmpl/utils/db';
+import {createServer} from '@exmpl/utils/server';
+
+let server: Express;
+beforeAll(async () => {
+  await db.open();
+  server = await createServer();
+});
+afterAll(async () => {
+  await db.close();
+  // server kill signal
+});
+
+describe('POST /api/v1/users', () => {
+  it('should return 201 and valid response for valid user', async (done) => {
+    request(server)
+      .post(`/api/v1/users`)
+      .send({
+        email: faker.internet.email(),
+        password: faker.internet.password(),
+        name: faker.name.firstName(),
+      })
+      .expect(201)
+      .end( function(err, res){
+        if(err) return done(err);
+        expect(res.body).toMatchObject({
+          userId: expect.stringMatching(/^[a-z0-9]{24}/)
+        });
+        done();
+      });
+  });
+  it('should return 409 and valid response for duplicate', async (done) => {
+    const data = {
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+      name: faker.name.firstName()
+    };
+    request(server)
+      .post(`/api/v1/users`)
+      .send(data)
+      .expect(201)
+      .end(function(err, res){
+        if(err) return done(err);
+        request(server)
+          .post(`/api/v1/users`)
+          .send(data)
+          .expect(409)
+          .end(function(err, res){
+            if(err) return done(err);
+            expect(res.body).toMatchObject({
+              error: {
+                type: 'account_already_exists',
+                message: expect.stringMatching(/already exists/)
+              }
+            })
+            done();
+          });
+      });
+  });
+  it('should return 400 and valid response for invalid request', async (done) => {
+    request(server)
+      .post(`/api/v1/users`)
+      .send({
+        mail: faker.internet.email(),
+        password: faker.internet.password(),
+        name: faker.name.firstName(),
+      })
+      .expect(400)
+      .end(function(err, res){
+        if(err) return done(err);
+        expect(res.body).toMatchObject({
+          error: {
+            type: 'request_validation',
+            message: expect.stringMatching(/email/),
+          }
+        })
+        done();
+      });
+  });
+});
+```
+controllers/__tests__/user.ts
+```ts
+import * as express from 'express';
+import UserService, {ErrorResponse} from '@exmpl/api/services/user';
+import {writeJsonResponse} from '@exmpl/utils/express';
+import logger from '@exmpl/utils/logger';
+
+export const auth = (req: express.Request, res: express.Response, 
+  next: express.NextFunction): void => {
+    logger.debug(`controller::user.ts::auth()`);
+    const token = req.headers.authorization!;
+    logger.debug(`controller::user.ts::auth() .. token=[${token}]`);
+      UserService.auth(token)
+        .then(authResponse => {
+          logger.debug(`controller::user.ts::auth() .. authResponse=[${authResponse}]`);
+          if(!(authResponse as any).error){
+            res.locals.auth = {
+              userId: (authResponse as {userId: string}).userId
+            };
+            next();
+          }else{
+            writeJsonResponse(res, 401, authResponse);
+          }
+        })
+        .catch(err => {
+          logger.error(`auth: ${err}`);
+          writeJsonResponse(res, 500, {
+            error: {
+              type: 'internal_server_error',
+              message: 'Internal Server Error'
+            }});
+        });
+}
+export const createUser = (req: express.Request, res: express.Response): void => {  
+  const {email, password, name} = req.body;
+  UserService.createUser(email, password, name)
+    .then( resp => {
+      if((resp as any).error){
+        if( (resp as ErrorResponse).error.type === 'account_already_exists'){
+          writeJsonResponse(res, 409, resp);
+        }else{
+          throw new Error(`unsupported ${resp}`);
+        }
+      }else{
+        writeJsonResponse(res, 201, resp);
+      }
+    })
+    .catch( (err: any) => {
+      logger.error(`createUser: ${err}`);
+      writeJsonResponse(res, 500, {
+        error: {
+          type: 'internal_server_error',
+          message: 'Internal Server Error'} });
+    });
+}
+
+```
+
 ### TDD Unit Test User Service
 
+services/__tests__/user.ts
 ```ts
 import faker from 'faker';
 import db from '@exmpl/utils/db';
@@ -1242,15 +1388,13 @@ describe('createUser', () => {
   });
 });
 ```
-
+services/auth.ts
 ```ts
 export type ErrorResponse = { error: {type: string, message: string}};
 export type AuthResponse = ErrorResponse | {userId: string};
 export type CreateUserResponse = ErrorResponse | {userId: string};
 import logger from '@exmpl/utils/logger';
 import User from '@exmpl/api/models/user';
-
-
 function auth(bearerToken: string): Promise<AuthResponse>{
   logger.debug(`services::user.ts::auth()`);
     return new Promise(function(resolve, reject){      
@@ -1288,6 +1432,165 @@ export default { auth: auth, createUser: createUser };
 npm run test:u
 ```
 
+
+### Typescript TDD Unit Jest Mock Reject Auth
+
+controllers/__tests__/user_failure.ts
+```ts
+import request from 'supertest';
+import {Express} from 'express-serve-static-core';
+import {createServer} from '@exmpl/utils/server';
+import { mocked } from 'ts-jest/utils';
+import UserService, { AuthResponse } from '@exmpl/api/services/user';
+let server: Express;
+beforeAll( async () => {
+  server = await createServer();
+});
+describe('auth failure', () => {
+  it('sould return 500 and valid response if auth reject', async (done) => {
+    const MockedUserService = mocked(UserService, true);
+    MockedUserService.auth = jest.fn().mockRejectedValue(new Error());
+    request(server)
+      .get(`/api/v1/goodbye`)
+      .set('Authorization', 'Bearer fakeToken')
+      .expect(500)
+      .end((err, res) => {
+        if(err) return done(err);
+        expect(res.body).toMatchObject({error: {
+          type: 'internal_server_error', 
+          message: 'Internal Server Error'
+        }});
+        done();
+      });
+  });
+});
+```
+
+```ts
+import * as express from 'express';
+import UserService, {ErrorResponse} from '@exmpl/api/services/user';
+import {writeJsonResponse} from '@exmpl/utils/express';
+import logger from '@exmpl/utils/logger';
+
+export const auth = (req: express.Request, res: express.Response, 
+  next: express.NextFunction): void => {
+    logger.debug(`controller::user.ts::auth()`);
+    const token = req.headers.authorization!;
+    logger.debug(`controller::user.ts::auth() .. token=[${token}]`);
+      UserService.auth(token)
+        .then(authResponse => {
+          logger.debug(`controller::user.ts::auth() .. authResponse=[${authResponse}]`);
+          if(!(authResponse as any).error){
+            res.locals.auth = {
+              userId: (authResponse as {userId: string}).userId
+            };
+            next();
+          }else{
+            writeJsonResponse(res, 401, authResponse);
+          }
+        })
+        .catch(err => {
+          logger.error(`auth: ${err}`);
+          writeJsonResponse(res, 500, {
+            error: {
+              type: 'internal_server_error',
+              message: 'Internal Server Error'
+            }});
+        });
+}
+export const createUser = (req: express.Request, res: express.Response): void => {  
+  const {email, password, name} = req.body;
+  UserService.createUser(email, password, name)
+    .then( resp => {
+      if((resp as any).error){
+        if( (resp as ErrorResponse).error.type === 'account_already_exists'){
+          writeJsonResponse(res, 409, resp);
+        }else{
+          throw new Error(`unsupported ${resp}`);
+        }
+      }else{
+        writeJsonResponse(res, 201, resp);
+      }
+    })
+    .catch( (err: any) => {
+      logger.error(`createUser: ${err}`);
+      writeJsonResponse(res, 500, {
+        error: {
+          type: 'internal_server_error',
+          message: 'Internal Server Error'} });
+    });
+}
+```
+utils/server.ts
+```ts
+import express from 'express';
+import { Express } from 'express-serve-static-core'
+import * as OpenApiValidator from 'express-openapi-validator';
+import { connector, summarise } from 'swagger-routes-express';
+import YAML from 'yamljs';
+import swaggerUi from 'swagger-ui-express';
+
+import * as api from '@exmpl/api/controllers';
+
+//import bodyParser from "body-parser"; // REFERENCE:: https://stackoverflow.com/questions/10005939/how-do-i-consume-the-json-post-data-in-an-express-application
+import morgan from 'morgan';
+import morganBody from 'morgan-body';
+import {expressDevLogger} from '@exmpl/utils/express_dev_logger';
+import config from '@exmpl/config';
+import logger from '@exmpl/utils/logger';
+
+export const createServer = async (): Promise<Express> => {
+  logger.debug(`utils::server.ts::createServer()`);
+  const yamlSpecFile = './config/openapi.yml';
+  const apiDefinition = YAML.load(yamlSpecFile);
+  const apiSummary = summarise(apiDefinition);
+  const server = express();  
+  server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(apiDefinition));
+  const validatorOptions = {
+    apiSpec: yamlSpecFile,
+    validateRequests: true,
+    validateResponses: true
+  }
+  //server.use(bodyParser.json()); // REFERENCE:: https://stackoverflow.com/questions/10005939/how-do-i-consume-the-json-post-data-in-an-express-application
+  server.use(express.json()); // REFERENCE:: https://stackoverflow.com/questions/10005939/how-do-i-consume-the-json-post-data-in-an-express-application
+
+  server.use(OpenApiValidator.middleware(validatorOptions));
+  logger.info(apiSummary);
+  server.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    res.status(err.status).json({
+      error: {
+        type: 'request_validation',
+        message: err.message,
+        errors: err.errors
+      }
+    });
+  });
+  
+  /* istanbul ignore file */  
+  if(config.morganLogger){
+    server.use(morgan(`:method :url :status :response-time ms - :res[content-length]`));
+  }
+  /* istanbul ignore file */
+  if(config.morganBodyLogger){
+    morganBody(server);
+  }
+  /* istanbul ignore file */
+  if(config.exmplDevLogger){
+    server.use(expressDevLogger); 
+  }
+  const connect = connector(api, apiDefinition, {
+    onCreateRoute: (method: string, descriptor: any[]) => {
+      descriptor.shift();
+      logger.verbose(`${method}: ${descriptor.map((d:any) => d.name).join(', ')}`);
+    },
+    security: {
+      bearerAuth: api.auth
+    }
+  });
+  connect(server);
+  return server;
+}
+```
 
 Reference:
 

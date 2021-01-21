@@ -17,8 +17,8 @@ servers:
 tags:
   - name: greeting
     description: Greeting APIs
-  - name: user
-    description: User APIs
+  - name: users
+    description: Users APIs
 paths:
   /hello:
     get:
@@ -55,17 +55,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HelloResponse'
-        500:
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FailResponse' 
-  /user:
+#        500:
+#          description: Internal Server Error
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/FailResponse' 
+  /users:
     post:
       summary: Create User
       tags:
-        - user
+        - users
       operationId: createUser
       requestBody:
         required: true

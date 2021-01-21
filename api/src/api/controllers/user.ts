@@ -3,8 +3,8 @@ import UserService, {ErrorResponse} from '@exmpl/api/services/user';
 import {writeJsonResponse} from '@exmpl/utils/express';
 import logger from '@exmpl/utils/logger';
 
-export function auth(req: express.Request, res: express.Response, 
-  next: express.NextFunction): void {
+export const auth = (req: express.Request, res: express.Response, 
+  next: express.NextFunction): void => {
     logger.debug(`controller::user.ts::auth()`);
     const token = req.headers.authorization!;
     logger.debug(`controller::user.ts::auth() .. token=[${token}]`);
@@ -29,7 +29,7 @@ export function auth(req: express.Request, res: express.Response,
             }});
         });
 }
-export const createUser = (req: express.Request, res: express.Response): void => {
+export const createUser = (req: express.Request, res: express.Response): void => {  
   const {email, password, name} = req.body;
   UserService.createUser(email, password, name)
     .then( resp => {
