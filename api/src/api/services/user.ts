@@ -5,7 +5,7 @@ import logger from '@exmpl/utils/logger';
 import User from '@exmpl/api/models/user';
 
 
-function auth(bearerToken: string): Promise<AuthResponse>{
+const auth = (bearerToken: string): Promise<AuthResponse> => {
   logger.debug(`services::user.ts::auth()`);
     return new Promise(function(resolve, reject){      
       const token = bearerToken.replace('Bearer ','');
@@ -17,7 +17,7 @@ function auth(bearerToken: string): Promise<AuthResponse>{
     });
 };
 
-function createUser(email: string, password: string, name: string): Promise<CreateUserResponse> {
+const createUser = (email: string, password: string, name: string): Promise<CreateUserResponse> => {
   return new Promise( (resolve, reject) => {
     const user = new User({email: email, password:password, name:name});
     user.save()
