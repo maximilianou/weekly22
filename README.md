@@ -1,6 +1,6 @@
 # weekly22
 
-## Typescript - UI - React - Redux Learning
+## Typescript - API - TDD - Express OpenAPI/Swagger Jest - Coverage
 
 ## Typescript - API - OpenAPI Swagger Auth - environment
 
